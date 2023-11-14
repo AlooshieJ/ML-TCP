@@ -104,6 +104,7 @@ main(int argc, char* argv[])
     cmd.Parse(argc, argv);
 
     Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpProjectACC"));
+    // Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpLinuxReno"));
 
     NodeContainer nodes;
     nodes.Create(2);
@@ -116,7 +117,7 @@ main(int argc, char* argv[])
     devices = pointToPoint.Install(nodes);
 
     Ptr<RateErrorModel> em = CreateObject<RateErrorModel>();
-    em->SetAttribute("ErrorRate", DoubleValue(0.00001));
+    em->SetAttribute("ErrorRate", DoubleValue(0.0000));
     devices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(em));
 
     InternetStackHelper stack;
@@ -151,16 +152,16 @@ main(int argc, char* argv[])
     PacketSinkHelper packetSinkHelper("ns3::TcpSocketFactory", anyAddress);
     ApplicationContainer sinkApps = packetSinkHelper.Install(nodes.Get(1));
     sinkApps.Start(Seconds(0.));
-    sinkApps.Stop(Seconds(20.));
+    sinkApps.Stop(Seconds(50.));
 
     Ptr<Socket> ns3TcpSocket = Socket::CreateSocket(nodes.Get(0), TcpSocketFactory::GetTypeId());
 
     Ptr<TutorialApp> app = CreateObject<TutorialApp>();
     // change the 1000 to have more packets being transmitted
-    app->Setup(ns3TcpSocket, sinkAddress, 1040, 1000, DataRate("1Mbps"));
+    app->Setup(ns3TcpSocket, sinkAddress, 1040, 100000, DataRate("10Mbps"));
     nodes.Get(0)->AddApplication(app);
     app->SetStartTime(Seconds(1.));
-    app->SetStopTime(Seconds(20.));
+    app->SetStopTime(Seconds(50.));
 
     AsciiTraceHelper asciiTraceHelper;
     Ptr<OutputStreamWrapper> stream = asciiTraceHelper.CreateFileStream("seventh.cwnd");
@@ -206,7 +207,7 @@ main(int argc, char* argv[])
     // probe output trace source ("OutputBytes") to write.
     fileHelper.WriteProbe(probeType, tracePath, "OutputBytes");
 
-    Simulator::Stop(Seconds(20));
+    Simulator::Stop(Seconds(50));
     Simulator::Run();
     Simulator::Destroy();
 

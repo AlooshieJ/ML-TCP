@@ -31,10 +31,10 @@
 #include <cmath>
 
 // Number of actions
-const int numActions = 10; // Assuming 10 possible values for the action
+const int numActions = 4; // Assuming 3 possible values for the action
 
 // Number of states 
-const int numStates = 10;
+const int numStates = 7;
 
 // Learning rate (alpha)
 const double learningRate = 0.1;
@@ -104,7 +104,20 @@ std::vector<double> leftShiftArray(std::vector<double> arr) {
 // Function to select a state given some state parameters
 int selectState(int current_cwnd, double current_RTT){
     
-    return 1;
+    if (current_cwnd < 10000)
+        return 0;
+    else if (current_cwnd >= 10000 && current_cwnd < 20000)
+        return 1;
+    else if (current_cwnd >= 20000 && current_cwnd < 30000)
+        return 2;
+    else if (current_cwnd >= 30000 && current_cwnd < 40000)
+        return 3;
+    else if (current_cwnd >= 40000 && current_cwnd < 50000)
+        return 4;
+    else if (current_cwnd >= 50000 && current_cwnd < 60000)
+        return 5;
+    else
+        return 6;
 }
 
 // Function to select an action with epsilon-greedy strategy
@@ -131,20 +144,35 @@ int selectAction(int state) {
 // Function to update Q-values
 std::vector<std::vector<double>> updateQValue(std::vector<std::vector<double>> qTable, int prevState, int prevAction, double reward) {
     double bestNextAction = qTable[prevState][selectAction(prevState)];
-    qTable[prevState][prevAction] += learningRate * (reward + discountFactor * bestNextAction - qTable[prevState][prevAction]);
+    // qTable[prevState][prevAction] += learningRate * (reward + discountFactor * bestNextAction - qTable[prevState][prevAction]);
+    qTable[prevState][prevAction] = bestNextAction;
     return qTable;
 }
 
 // Function to calculate reward based on the next state
-double calculateReward(double prev_RTT, double current_RTT) {
+double calculateReward(int prev_cwnd, int current_cwnd) {
     // Your reward calculation logic based on the next state
 
-    return prev_RTT - current_RTT; // Example to change
+    return current_cwnd - prev_cwnd; // Example to change
 }
 
 // Function to select the desired action
-int perform_action(int action, int current_cwnd){
-    return 1000;
+int perform_action(int action, int current_cwnd, int iteration_count){
+    switch (action)
+    {
+    case 0:
+        return current_cwnd;
+    case 1:
+        return current_cwnd + 0.01 * current_cwnd;
+    case 2:
+        return current_cwnd + 0.1 * current_cwnd;
+    case 3:
+        return current_cwnd + 0.5 * current_cwnd;
+    default:
+        return current_cwnd;
+        std::cout << "You are in Default" << std::endl;
+    }
+    
 }
 
 void print_table(std::vector<std::vector<double>> qTable, int numActions, int numStates, int iteration_count){
@@ -166,7 +194,6 @@ TcpProjectACC::IncreaseWindow(Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
     double current_RTT = tcb->m_lastRtt.Get().GetDouble();
     int current_cwnd = tcb -> m_cWnd;
 
-
     int currentState; // Initial state, both variables at 0
     int action;
 
@@ -175,7 +202,7 @@ TcpProjectACC::IncreaseWindow(Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
 
     if (iteration_count > 1){
         // Calculate reward based on the next state
-        double reward = calculateReward(prev_RTT, current_RTT);
+        double reward = calculateReward(prev_cwnd, current_cwnd);
 
         // Update Q-value for the previous state-action pair
         qTable = updateQValue(qTable, prevState, prevAction, reward);
@@ -184,8 +211,8 @@ TcpProjectACC::IncreaseWindow(Ptr<TcpSocketState> tcb, uint32_t segmentsAcked)
     // Select an action using epsilon-greedy strategy
     action = selectAction(currentState);
 
-    tcb -> m_cWnd = perform_action(action, current_cwnd);
-   
+    tcb -> m_cWnd = perform_action(action, current_cwnd, iteration_count);
+        
     // Store the current state and action as previous for the next iteration
     prevState = currentState;
     prevAction = action;
