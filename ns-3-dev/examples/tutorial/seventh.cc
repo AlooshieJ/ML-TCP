@@ -103,8 +103,8 @@ main(int argc, char* argv[])
     cmd.AddValue("useIpv6", "Use Ipv6", useV6);
     cmd.Parse(argc, argv);
 
-    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpProjectACC"));
-    // Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpLinuxReno"));
+    // Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpProjectACC"));
+    Config::SetDefault("ns3::TcpL4Protocol::SocketType", StringValue("ns3::TcpLinuxReno"));
 
     NodeContainer nodes;
     nodes.Create(2);
@@ -117,7 +117,7 @@ main(int argc, char* argv[])
     devices = pointToPoint.Install(nodes);
 
     Ptr<RateErrorModel> em = CreateObject<RateErrorModel>();
-    em->SetAttribute("ErrorRate", DoubleValue(0.0000));
+    em->SetAttribute("ErrorRate", DoubleValue(0.0000001));
     devices.Get(1)->SetAttribute("ReceiveErrorModel", PointerValue(em));
 
     InternetStackHelper stack;

@@ -147,7 +147,7 @@ int perform_action(int action, int current_cwnd, int iteration_count){
     case 1:
         return current_cwnd + 1;
     case 2:
-        return current_cwnd + 1000;
+        return current_cwnd + 1000; // mettere rand 500-1000?
     case 3:
         return current_cwnd * (1 + 0.5);
     default:
